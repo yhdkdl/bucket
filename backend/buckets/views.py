@@ -2,6 +2,9 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from .models import BucketList, BucketItem
 
+from services.ai_generator import generate_bucket_activities
+import json
+
 
 @api_view(["POST"])
 def generate_bucket(request):
@@ -11,6 +14,7 @@ def generate_bucket(request):
     budget = request.data.get("budget")
     group_type = request.data.get("group_type")
 
+    # create bucket record
     bucket = BucketList.objects.create(
         name=name,
         location=location,
@@ -18,21 +22,26 @@ def generate_bucket(request):
         group_type=group_type
     )
 
-    mock_items = [
-        "Visit a famous landmark",
-        "Try a local restaurant",
-        "Walk through a city park",
-        "Take a sunset photo",
-        "Explore a hidden street"
-    ]
+    # 🔥 AI generation
+    ai_text = generate_bucket_activities(
+        name,
+        location,
+        budget,
+        group_type
+    )
+
+    # convert AI JSON string → python list
+    activities = json.loads(ai_text)
 
     items_response = []
 
-    for title in mock_items:
+    # save activities
+    for act in activities:
         item = BucketItem.objects.create(
             bucket_list=bucket,
-            title=title
+            title=act["title"]
         )
+
         items_response.append({
             "title": item.title
         })

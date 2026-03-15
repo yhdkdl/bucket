@@ -27,7 +27,6 @@
       </ul>
     </div>
   </div>
-  <p>Home.vue is working!</p>
 </template>
 
 <script setup>
