@@ -31,7 +31,7 @@
 
 <script setup>
 import { ref } from "vue"
-import { generateBucket } from "../services/api"
+import api from "../services/api"
 
 const name = ref("")
 const location = ref("")
@@ -44,7 +44,7 @@ const loading = ref(false)
 async function submitForm() {
   loading.value = true
   try {
-    const data = await generateBucket({
+    const data = await api.generateBucket({
       name: name.value,
       location: location.value,
       budget: budget.value,
@@ -53,6 +53,7 @@ async function submitForm() {
     items.value = data.items
   } catch (err) {
     alert("Failed to generate bucket")
+    console.error(err)
   }
   loading.value = false
 }

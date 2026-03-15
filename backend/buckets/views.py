@@ -50,3 +50,29 @@ def generate_bucket(request):
         "bucket_id": bucket.id,
         "items": items_response
     })
+
+@api_view(["GET"])
+def bucket_history(request):
+    """
+    Returns all bucket lists with their items.
+    Currently global; later will filter by user.
+    """
+    history = []
+
+    # Fetch all buckets from DB
+    buckets = BucketList.objects.all().order_by("-created_at")  # newest first
+
+    for bucket in buckets:
+        items = BucketItem.objects.filter(bucket_list=bucket)
+        item_list = [{"title": item.title} for item in items]
+
+        history.append({
+            "bucket_id": bucket.id,
+            "name": bucket.name,
+            "location": bucket.location,
+            "budget": bucket.budget,
+            "group_type": bucket.group_type,
+            "items": item_list
+        })
+
+    return Response(history)
