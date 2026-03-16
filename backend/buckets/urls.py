@@ -9,6 +9,6 @@ from .views import (
 urlpatterns = [
     path("generate/", generate_bucket),
     path("history/", bucket_history),
-    path("detail/<int:bucket_id>/", bucket_detail),
-    path("complete/<int:item_id>/", complete_item),
+   path("<int:id>/", bucket_detail),
+      path("items/<int:id>/complete/", complete_item),
 ]

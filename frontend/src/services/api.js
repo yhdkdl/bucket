@@ -1,7 +1,7 @@
-// frontend/src/services/api.js
 const API_BASE = "http://127.0.0.1:8000/api"
 
 const api = {
+
   generateBucket: async (payload) => {
     const response = await fetch(`${API_BASE}/buckets/generate/`, {
       method: "POST",
@@ -19,16 +19,38 @@ const api = {
   },
 
   getHistory: async () => {
-    const response = await fetch(`${API_BASE}/buckets/history/`, {
-      method: "GET"
-    })
+    const response = await fetch(`${API_BASE}/buckets/history/`)
 
     if (!response.ok) {
       throw new Error("Failed to fetch history")
     }
 
     return await response.json()
+  },
+
+  getBucketDetail: async (id) => {
+    const response = await fetch(`${API_BASE}/buckets/${id}/`)
+
+    if (!response.ok) {
+      throw new Error("Failed to fetch bucket detail")
+    }
+
+    return await response.json()
+  },
+
+  completeItem: async (id) => {
+  const response = await fetch(
+    `${API_BASE}/buckets/items/${id}/complete/`,
+    { method: "POST" }
+  )
+
+  if (!response.ok) {
+    throw new Error("Failed to complete item")
   }
+
+  return await response.json()
+}
+
 }
 
 export default api

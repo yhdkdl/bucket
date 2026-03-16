@@ -8,49 +8,50 @@ import json
 
 @api_view(["POST"])
 def generate_bucket(request):
+    try:
+        name = request.data.get("name")
+        location = request.data.get("location")
+        budget = request.data.get("budget")
+        group_type = request.data.get("group_type")
 
-    name = request.data.get("name")
-    location = request.data.get("location")
-    budget = request.data.get("budget")
-    group_type = request.data.get("group_type")
-
-    # create bucket record
-    bucket = BucketList.objects.create(
-        name=name,
-        location=location,
-        budget=budget,
-        group_type=group_type
-    )
-
-    # 🔥 AI generation
-    ai_text = generate_bucket_activities(
-        name,
-        location,
-        budget,
-        group_type
-    )
-
-    # convert AI JSON string → python list
-    activities = json.loads(ai_text)
-
-    items_response = []
-
-    # save activities
-    for act in activities:
-        item = BucketItem.objects.create(
-            bucket_list=bucket,
-            title=act["title"]
+        bucket = BucketList.objects.create(
+            name=name,
+            location=location,
+            budget=budget,
+            group_type=group_type
         )
 
-        items_response.append({
-            "title": item.title
-        })
+        # Call AI service
+        ai_text = generate_bucket_activities(name, location, budget, group_type)
 
-    return Response({
-        "bucket_id": bucket.id,
-        "items": items_response
-    })
+        # Validate AI response
+        if not ai_text:
+            return Response({"error": "AI returned empty response"}, status=500)
 
+        try:
+            activities = json.loads(ai_text)
+        except json.JSONDecodeError:
+            # If AI returns non-JSON, fallback to mock activities
+            activities = [
+                {"title": "Visit a famous landmark"},
+                {"title": "Try a local restaurant"},
+                {"title": "Walk through a city park"},
+                {"title": "Take a sunset photo"},
+                {"title": "Explore a hidden street"}
+            ]
+
+        items_response = []
+        for act in activities:
+            # act may be string or dict depending on AI
+            title = act["title"] if isinstance(act, dict) else str(act)
+            item = BucketItem.objects.create(bucket_list=bucket, title=title)
+            items_response.append({"title": item.title})
+
+        return Response({"bucket_id": bucket.id, "items": items_response})
+
+    except Exception as e:
+        return Response({"error": str(e)}, status=500)
+    
 @api_view(["GET"])
 def bucket_history(request):
     """
@@ -77,20 +78,17 @@ def bucket_history(request):
 
     return Response(history)
 
-@api_view(["GET"])
-def bucket_detail(request, bucket_id):
+from django.shortcuts import get_object_or_404
 
-    try:
-        bucket = BucketList.objects.get(id=bucket_id)
-    except BucketList.DoesNotExist:
-        return Response({"error": "Not found"}, status=404)
+@api_view(["GET"])
+def bucket_detail(request, id):
+    bucket = get_object_or_404(BucketList, id=id)
 
     items = BucketItem.objects.filter(bucket_list=bucket)
 
-    item_list = []
-
+    items_data = []
     for item in items:
-        item_list.append({
+        items_data.append({
             "id": item.id,
             "title": item.title,
             "completed": item.completed,
@@ -98,21 +96,20 @@ def bucket_detail(request, bucket_id):
         })
 
     return Response({
-        "bucket_id": bucket.id,
+        "id": bucket.id,
         "name": bucket.name,
         "location": bucket.location,
-        "items": item_list
+        "items": items_data
     })
 
 @api_view(["POST"])
-def complete_item(request, item_id):
+def complete_item(request, id):
 
-    try:
-        item = BucketItem.objects.get(id=item_id)
-    except BucketItem.DoesNotExist:
-        return Response({"error": "Not found"}, status=404)
+    item = get_object_or_404(BucketItem, id=id)
 
     item.completed = True
     item.save()
 
-    return Response({"status": "completed"})
+    return Response({
+        "status": "completed"
+    })
