@@ -68,7 +68,10 @@ def bucket_history(request):
 
     for bucket in buckets:
         items = BucketItem.objects.filter(bucket_list=bucket)
-        item_list = [{"title": item.title} for item in items]
+        item_list = [{"title": item.title, "completed": item.completed} for item in items]
+        
+        # Check if has collage (completed items with photos)
+        has_collage = BucketItem.objects.filter(bucket_list=bucket, completed=True, photo__isnull=False).exists()
 
         history.append({
             "bucket_id": bucket.id,
@@ -76,7 +79,9 @@ def bucket_history(request):
             "location": bucket.location,
             "budget": bucket.budget,
             "group_type": bucket.group_type,
-            "items": item_list
+            "created_at": bucket.created_at.isoformat(),
+            "items": item_list,
+            "has_collage": has_collage
         })
 
     return Response(history)
@@ -132,9 +137,10 @@ def upload_photo(request, id):
 def generate_collage(request, bucket_id):
     """
     Generate a collage image from all completed photos in a bucket.
-    Query param: type=horizontal|vertical
+    Query param: type=horizontal|vertical, size=normal|small, preview=true|false
     """
     collage_type = request.GET.get("type", "horizontal")
+    size = request.GET.get("size", "normal")
     
     try:
         bucket = BucketList.objects.get(id=bucket_id)
@@ -152,9 +158,13 @@ def generate_collage(request, bucket_id):
         img = Image.open(item.photo.path).convert("RGB")
         images.append(img)
 
+    # Size multipliers
+    size_multiplier = 0.33 if size == "small" else 1.0
+    max_height = int(300 * size_multiplier)
+    max_width = int(300 * size_multiplier)
+
     if collage_type == "horizontal":
         # Arrange images horizontally
-        max_height = 300
         resized_images = []
         total_width = 0
         for img in images:
@@ -172,7 +182,6 @@ def generate_collage(request, bucket_id):
 
     elif collage_type == "vertical":
         # Arrange images vertically
-        max_width = 300
         resized_images = []
         total_height = 0
         for img in images:

@@ -16,8 +16,11 @@
         <option value="friends">Friends</option>
         <option value="family">Family</option>
       </select>
-      <button @click="submitForm">Generate Bucket</button>
-      <p v-if="loading">Generating adventure...</p>
+      <button @click="submitForm" :disabled="loading">
+        {{ loading ? "Generating…" : "Generate Bucket" }}
+      </button>
+      <p v-if="loading" class="loading">Generating your adventure… ✨ AI is thinking</p>
+      <p v-if="error" class="error">{{ error }}</p>
     </div>
 
     <!-- <div v-if="items.length" class="results">
@@ -41,9 +44,16 @@ const location = ref("")
 const budget = ref("")
 const groupType = ref("")
 const loading = ref(false)
+const error = ref("")
 
 async function submitForm() {
+  if (!name.value || !location.value || !budget.value || !groupType.value) {
+    error.value = "Please fill in all fields"
+    return
+  }
+
   loading.value = true
+  error.value = ""
 
   try {
     const data = await api.generateBucket({
@@ -57,7 +67,7 @@ async function submitForm() {
 
   } catch (err) {
     console.error(err)
-    alert("Failed to generate bucket")
+    error.value = "Failed to generate bucket. Please try again."
   }
 
   loading.value = false
@@ -75,6 +85,16 @@ async function submitForm() {
   display: flex;
   flex-direction: column;
   gap: 10px;
+}
+
+.loading {
+  color: #007bff;
+  font-style: italic;
+}
+
+.error {
+  color: #dc3545;
+  font-weight: bold;
 }
 
 .results {
