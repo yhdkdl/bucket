@@ -34,16 +34,36 @@
         <option value="vertical">Vertical</option>
       </select>
 
-      <button 
-        @click="downloadCollage" 
-        :disabled="!allCompleted"
+      <button
+        @click="generatePreview"
+        :disabled="!allCompleted || previewLoading"
+      >
+        {{ previewLoading ? "Generating preview…" : "Generate Preview" }}
+      </button>
+
+      <button
+        @click="downloadCollage"
+        :disabled="!allCompleted || !previewUrl"
       >
         Download Collage
       </button>
 
       <p v-if="!allCompleted" style="color: gray; font-size: 0.9em;">
-        Complete all items to enable download
+        Complete all items first to enable preview & download
       </p>
+
+      <p v-if="previewError" style="color: red; font-size: 0.9em;">
+        {{ previewError }}
+      </p>
+
+      <div v-if="previewUrl" class="collage-preview">
+        <img
+          :src="previewUrl"
+          @load="onPreviewLoaded"
+          @error="onPreviewError"
+          alt="Collage preview"
+        />
+      </div>
     </div>
   </div>
 
@@ -51,7 +71,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from "vue"
+import { ref, onMounted, computed, watch } from "vue"
 import { useRoute } from "vue-router"
 import api from "../services/api"
 
@@ -60,6 +80,17 @@ const bucket = ref(null)
 const collageType = ref("horizontal") // default type
 
 const mediaBase = "http://127.0.0.1:8000" // for image URLs
+const apiBase = "http://127.0.0.1:8000/api" // used for collage preview URLs
+
+const previewUrl = ref(null)
+const previewLoading = ref(false)
+const previewError = ref(null)
+
+watch(collageType, () => {
+  // Clear preview whenever type changes (user must regenerate)
+  previewUrl.value = null
+  previewError.value = null
+})
 
 async function loadBucket() {
   try {
@@ -90,6 +121,31 @@ async function upload(id, event) {
   } catch (err) {
     alert("Failed to upload photo")
   }
+}
+
+// Preview collage
+function getCollageEndpoint(preview = false) {
+  return `${apiBase}/buckets/${bucket.value.id}/collage/?type=${collageType.value}&preview=${preview}`
+}
+
+function onPreviewLoaded() {
+  previewLoading.value = false
+}
+
+function onPreviewError() {
+  previewLoading.value = false
+  previewError.value = "Failed to load preview"
+}
+
+async function generatePreview() {
+  if (!allCompleted.value) {
+    alert("Complete all items to generate a preview!")
+    return
+  }
+
+  previewError.value = null
+  previewLoading.value = true
+  previewUrl.value = getCollageEndpoint(true)
 }
 
 // Download collage
@@ -144,5 +200,18 @@ onMounted(loadBucket)
   display: flex;
   flex-direction: column;
   gap: 10px;
+}
+
+.collage-preview {
+  margin-top: 20px;
+  border: 1px solid #ddd;
+  padding: 10px;
+  background: #fafafa;
+}
+
+.collage-preview img {
+  max-width: 100%;
+  display: block;
+  margin: auto;
 }
 </style>

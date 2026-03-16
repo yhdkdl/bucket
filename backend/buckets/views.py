@@ -196,4 +196,11 @@ def generate_collage(request, bucket_id):
     collage_img.save(buffer, format="PNG")
     buffer.seek(0)
 
-    return HttpResponse(buffer, content_type="image/png")
+    preview = request.GET.get("preview", "false").lower() == "true"
+    response = HttpResponse(buffer, content_type="image/png")
+    if preview:
+        response["Content-Disposition"] = "inline; filename=collage.png"
+    else:
+        response["Content-Disposition"] = "attachment; filename=collage.png"
+
+    return response
