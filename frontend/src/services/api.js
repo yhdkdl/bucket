@@ -72,7 +72,7 @@ uploadPhoto: async (id, file) => {
 },
 
 generateCollage: async (bucketId, type) => {
-  const response = await fetch(`${API_BASE}/buckets/${bucketId}/collage/?type=${type}`)
+  const response = await fetch(`${API_BASE}/buckets/${bucketId}/collage/?type=${type}&preview=false`)
 
   if (!response.ok) {
     throw new Error("Failed to generate collage")

@@ -1,14 +1,28 @@
 <template>
   <div class="history-page">
     <h2>Bucket History</h2>
-    <div v-if="loading">Loading...</div>
+    <div v-if="loading" class="loading">Loading your adventures…</div>
+    <div v-if="error" class="error">{{ error }}</div>
     <div v-else>
       <div v-for="bucket in history" :key="bucket.bucket_id" class="bucket-card">
-        <h3>{{ bucket.name }} - {{ bucket.location }}</h3>
-        <p>Budget: {{ bucket.budget }}, Group: {{ bucket.group_type }}</p>
-        <ul>
-          <li v-for="item in bucket.items" :key="item.title">{{ item.title }}</li>
-        </ul>
+        <div class="card-header">
+          <h3>{{ bucket.name }}</h3>
+          <p class="location">{{ bucket.location }}</p>
+          <p class="date">Created: {{ formatDate(bucket.created_at) }}</p>
+        </div>
+        
+        <div class="progress-section">
+          <label>Progress: {{ progressPercent(bucket) }}%</label>
+          <progress :value="completedCount(bucket)" :max="bucket.items.length"></progress>
+        </div>
+        
+        <div v-if="bucket.has_collage" class="thumbnail">
+          <img :src="getThumbnailUrl(bucket)" alt="Collage thumbnail" />
+        </div>
+        
+        <router-link :to="`/bucket/${bucket.bucket_id}`" class="view-button">
+          View Bucket
+        </router-link>
       </div>
     </div>
   </div>
@@ -22,7 +36,9 @@ export default {
   data() {
     return {
       history: [],
-      loading: true
+      loading: true,
+      error: null,
+      apiBase: "http://127.0.0.1:8000/api"
     };
   },
   async created() {
@@ -31,18 +47,109 @@ export default {
       this.history = res;
     } catch (err) {
       console.error("Failed to load history", err);
+      this.error = "Failed to load history. Please try refreshing the page.";
     } finally {
       this.loading = false;
+    }
+  },
+  methods: {
+    formatDate(dateString) {
+      return new Date(dateString).toLocaleDateString();
+    },
+    completedCount(bucket) {
+      return bucket.items.filter(item => item.completed).length;
+    },
+    progressPercent(bucket) {
+      const completed = this.completedCount(bucket);
+      const total = bucket.items.length;
+      return total > 0 ? Math.round((completed / total) * 100) : 0;
+    },
+    getThumbnailUrl(bucket) {
+      return `${this.apiBase}/buckets/${bucket.bucket_id}/collage/?type=horizontal&size=small&preview=true`;
     }
   }
 };
 </script>
 
 <style scoped>
+.history-page {
+  max-width: 800px;
+  margin: auto;
+  padding: 20px;
+}
+
 .bucket-card {
   border: 1px solid #ddd;
   padding: 1rem;
   margin-bottom: 1rem;
   border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.card-header {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.card-header h3 {
+  margin: 0;
+  font-size: 1.2em;
+}
+
+.location {
+  color: #666;
+  font-weight: bold;
+}
+
+.date {
+  color: #999;
+  font-size: 0.9em;
+}
+
+.progress-section {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.thumbnail {
+  text-align: center;
+}
+
+.thumbnail img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 4px;
+}
+
+.view-button {
+  align-self: flex-start;
+  padding: 8px 16px;
+  background: #007bff;
+  color: white;
+  text-decoration: none;
+  border-radius: 4px;
+  transition: background 0.2s;
+}
+
+.view-button:hover {
+  background: #0056b3;
+}
+
+.loading {
+  color: #007bff;
+  font-style: italic;
+  text-align: center;
+  padding: 20px;
+}
+
+.error {
+  color: #dc3545;
+  font-weight: bold;
+  text-align: center;
+  padding: 20px;
 }
 </style>
