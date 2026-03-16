@@ -1,6 +1,9 @@
+from django.http import HttpResponse
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from .models import BucketList, BucketItem
+from PIL import Image
+import io
 
 from services.ai_generator import generate_bucket_activities
 import json
@@ -124,3 +127,73 @@ def upload_photo(request, id):
         })
 
     return Response({"error": "No photo provided"}, status=400)
+
+@api_view(["GET"])
+def generate_collage(request, bucket_id):
+    """
+    Generate a collage image from all completed photos in a bucket.
+    Query param: type=horizontal|vertical
+    """
+    collage_type = request.GET.get("type", "horizontal")
+    
+    try:
+        bucket = BucketList.objects.get(id=bucket_id)
+    except BucketList.DoesNotExist:
+        return Response({"error": "Bucket not found"}, status=404)
+
+    # Filter completed items with photos
+    completed_items = BucketItem.objects.filter(bucket_list=bucket, completed=True, photo__isnull=False)
+    if not completed_items.exists():
+        return Response({"error": "No completed photos to generate collage"}, status=400)
+
+    # Open all images
+    images = []
+    for item in completed_items:
+        img = Image.open(item.photo.path).convert("RGB")
+        images.append(img)
+
+    if collage_type == "horizontal":
+        # Arrange images horizontally
+        max_height = 300
+        resized_images = []
+        total_width = 0
+        for img in images:
+            img_ratio = img.width / img.height
+            new_width = int(max_height * img_ratio)
+            resized_img = img.resize((new_width, max_height))
+            resized_images.append(resized_img)
+            total_width += new_width
+        
+        collage_img = Image.new("RGB", (total_width, max_height), (255, 255, 255))
+        x_offset = 0
+        for img in resized_images:
+            collage_img.paste(img, (x_offset, 0))
+            x_offset += img.width
+
+    elif collage_type == "vertical":
+        # Arrange images vertically
+        max_width = 300
+        resized_images = []
+        total_height = 0
+        for img in images:
+            img_ratio = img.height / img.width
+            new_height = int(max_width * img_ratio)
+            resized_img = img.resize((max_width, new_height))
+            resized_images.append(resized_img)
+            total_height += new_height
+        
+        collage_img = Image.new("RGB", (max_width, total_height), (255, 255, 255))
+        y_offset = 0
+        for img in resized_images:
+            collage_img.paste(img, (0, y_offset))
+            y_offset += img.height
+
+    else:
+        return Response({"error": "Invalid collage type"}, status=400)
+
+    # Save to BytesIO
+    buffer = io.BytesIO()
+    collage_img.save(buffer, format="PNG")
+    buffer.seek(0)
+
+    return HttpResponse(buffer, content_type="image/png")
