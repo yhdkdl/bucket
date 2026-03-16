@@ -4,6 +4,7 @@ from .views import (
     bucket_history,
     bucket_detail,
     complete_item,
+    generate_collage,
     upload_photo
 )
 
@@ -13,4 +14,5 @@ urlpatterns = [
     path("<int:id>/", bucket_detail),
     path("items/<int:id>/complete/", complete_item),
     path("items/<int:id>/upload-photo/", upload_photo),
+     path("<int:bucket_id>/collage/", generate_collage, name="generate-collage"),
 ]
