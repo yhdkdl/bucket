@@ -21,7 +21,8 @@ def generate_bucket(request):
             name=name,
             location=location,
             budget=budget,
-            group_type=group_type
+            group_type=group_type,
+            owner=request.user
         )
 
         # Call AI service
@@ -64,7 +65,7 @@ def bucket_history(request):
     history = []
 
     # Fetch all buckets from DB
-    buckets = BucketList.objects.all().order_by("-created_at")  # newest first
+    buckets = BucketList.objects.filter(owner=request.user).order_by("-created_at")  # newest first
 
     for bucket in buckets:
         items = BucketItem.objects.filter(bucket_list=bucket)
@@ -91,6 +92,8 @@ from django.shortcuts import get_object_or_404
 @api_view(["GET"])
 def bucket_detail(request, id):
     bucket = get_object_or_404(BucketList, id=id)
+    if bucket.owner != request.user:
+        return Response({"error": "Unauthorized"}, status=403)
 
     items = BucketItem.objects.filter(bucket_list=bucket)
 
@@ -113,6 +116,8 @@ def bucket_detail(request, id):
 @api_view(["POST"])
 def complete_item(request, id):
     item = get_object_or_404(BucketItem, id=id)
+    if item.bucket_list.owner != request.user:
+        return Response({"error": "Unauthorized"}, status=403)
     item.completed = not item.completed  # <-- toggle True/False
     item.save()
     return Response({"status": "success", "completed": item.completed})
@@ -121,6 +126,8 @@ def complete_item(request, id):
 def upload_photo(request, id):
 
     item = get_object_or_404(BucketItem, id=id)
+    if item.bucket_list.owner != request.user:
+        return Response({"error": "Unauthorized"}, status=403)
 
     if "photo" in request.FILES:
         item.photo = request.FILES["photo"]
@@ -146,6 +153,9 @@ def generate_collage(request, bucket_id):
         bucket = BucketList.objects.get(id=bucket_id)
     except BucketList.DoesNotExist:
         return Response({"error": "Bucket not found"}, status=404)
+    
+    if bucket.owner != request.user:
+        return Response({"error": "Unauthorized"}, status=403)
 
     # Filter completed items with photos
     completed_items = BucketItem.objects.filter(bucket_list=bucket, completed=True, photo__isnull=False)
