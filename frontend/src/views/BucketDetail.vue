@@ -3,19 +3,23 @@
     <h1>{{ bucket.name }} - {{ bucket.location }}</h1>
 
     <ul>
-      <li v-for="item in bucket.items" :key="item.id">
-        <span
-          :style="{ textDecoration: item.completed ? 'line-through' : 'none' }"
-        >
-          {{ item.title }}
-        </span>
+     <li v-for="item in bucket.items" :key="item.id">
 
-        <button v-if="!item.completed" @click="markComplete(item.id)">
-          Complete
-        </button>
+  <span :style="{ textDecoration: item.completed ? 'line-through' : 'none' }">
+    {{ item.title }}
+  </span>
 
-        <span v-else>✅ Done</span>
-      </li>
+  <button @click="markComplete(item.id)">
+    ✅
+  </button>
+
+  <input type="file" @change="upload(item.id, $event)" />
+
+  <div v-if="item.photo">
+    <img :src="'http://127.0.0.1:8000' + item.photo" width="150" />
+  </div>
+
+</li>
     </ul>
   </div>
 
@@ -35,10 +39,22 @@ async function loadBucket() {
 }
 
 async function markComplete(id) {
-  await api.completeItem(id)
+  try {
+    const data = await api.completeItem(id)
+    await loadBucket() // refresh completed state
+  } catch (err) {
+    alert("Failed to update item")
+  }
+}
+async function upload(id, event) {
 
-  // reload updated state
-  await loadBucket()
+  const file = event.target.files[0]
+
+  if (!file) return
+
+  await api.uploadPhoto(id, file)
+
+  await loadBucket()   // refresh UI
 }
 
 onMounted(loadBucket)

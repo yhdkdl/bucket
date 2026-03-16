@@ -104,12 +104,23 @@ def bucket_detail(request, id):
 
 @api_view(["POST"])
 def complete_item(request, id):
+    item = get_object_or_404(BucketItem, id=id)
+    item.completed = not item.completed  # <-- toggle True/False
+    item.save()
+    return Response({"status": "success", "completed": item.completed})
+
+@api_view(["POST"])
+def upload_photo(request, id):
 
     item = get_object_or_404(BucketItem, id=id)
 
-    item.completed = True
-    item.save()
+    if "photo" in request.FILES:
+        item.photo = request.FILES["photo"]
+        item.save()
 
-    return Response({
-        "status": "completed"
-    })
+        return Response({
+            "status": "photo uploaded",
+            "photo_url": item.photo.url
+        })
+
+    return Response({"error": "No photo provided"}, status=400)

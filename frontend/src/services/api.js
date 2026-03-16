@@ -49,6 +49,26 @@ const api = {
   }
 
   return await response.json()
+},
+
+uploadPhoto: async (id, file) => {
+
+  const formData = new FormData()
+  formData.append("photo", file)
+
+  const response = await fetch(
+    `${API_BASE}/buckets/items/${id}/upload-photo/`,
+    {
+      method: "POST",
+      body: formData
+    }
+  )
+
+  if (!response.ok) {
+    throw new Error("Failed to upload photo")
+  }
+
+  return await response.json()
 }
 
 }
