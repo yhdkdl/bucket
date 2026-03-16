@@ -1,4 +1,5 @@
 from django.db import models
+from django.contrib.auth.models import User
 
 
 class BucketList(models.Model):
@@ -7,6 +8,10 @@ class BucketList(models.Model):
     budget = models.CharField(max_length=50)
     group_type = models.CharField(max_length=50)
     created_at = models.DateTimeField(auto_now_add=True)
+    owner = models.ForeignKey(User, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return self.name
 
     def __str__(self):
         return self.name
