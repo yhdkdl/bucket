@@ -76,3 +76,43 @@ def bucket_history(request):
         })
 
     return Response(history)
+
+@api_view(["GET"])
+def bucket_detail(request, bucket_id):
+
+    try:
+        bucket = BucketList.objects.get(id=bucket_id)
+    except BucketList.DoesNotExist:
+        return Response({"error": "Not found"}, status=404)
+
+    items = BucketItem.objects.filter(bucket_list=bucket)
+
+    item_list = []
+
+    for item in items:
+        item_list.append({
+            "id": item.id,
+            "title": item.title,
+            "completed": item.completed,
+            "photo": item.photo.url if item.photo else None
+        })
+
+    return Response({
+        "bucket_id": bucket.id,
+        "name": bucket.name,
+        "location": bucket.location,
+        "items": item_list
+    })
+
+@api_view(["POST"])
+def complete_item(request, item_id):
+
+    try:
+        item = BucketItem.objects.get(id=item_id)
+    except BucketItem.DoesNotExist:
+        return Response({"error": "Not found"}, status=404)
+
+    item.completed = True
+    item.save()
+
+    return Response({"status": "completed"})
