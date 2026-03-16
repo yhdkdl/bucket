@@ -20,29 +20,31 @@
       <p v-if="loading">Generating adventure...</p>
     </div>
 
-    <div v-if="items.length" class="results">
+    <!-- <div v-if="items.length" class="results">
       <h2>Your Adventure List</h2>
       <ul>
         <li v-for="item in items" :key="item.title">{{ item.title }}</li>
       </ul>
-    </div>
+    </div> -->
   </div>
 </template>
 
 <script setup>
 import { ref } from "vue"
+import { useRouter } from "vue-router"
 import api from "../services/api"
+
+const router = useRouter()
 
 const name = ref("")
 const location = ref("")
 const budget = ref("")
 const groupType = ref("")
-
-const items = ref([])
 const loading = ref(false)
 
 async function submitForm() {
   loading.value = true
+
   try {
     const data = await api.generateBucket({
       name: name.value,
@@ -50,11 +52,14 @@ async function submitForm() {
       budget: budget.value,
       group_type: groupType.value
     })
-    items.value = data.items
+
+    router.push(`/bucket/${data.bucket_id}`)
+
   } catch (err) {
-    alert("Failed to generate bucket")
     console.error(err)
+    alert("Failed to generate bucket")
   }
+
   loading.value = false
 }
 </script>
