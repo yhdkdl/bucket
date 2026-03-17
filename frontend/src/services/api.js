@@ -1,9 +1,35 @@
 const API_BASE = "http://127.0.0.1:8000/api"
 
-const api = {
+function getAuthHeaders() {
+  const token = localStorage.getItem("token")
 
+  if (!token) {
+    return {}
+  }
+
+  return { "Authorization": `Bearer ${token}` }
+}
+
+async function authFetch(url, options = {}) {
+  const response = await fetch(url, {
+    ...options,
+    headers: {
+      ...(options.headers || {}),
+      ...getAuthHeaders()
+    }
+  })
+
+  if (response.status === 401) {
+    throw new Error("Unauthorized")
+  }
+
+  return response
+}
+
+
+const api = {
   generateBucket: async (payload) => {
-    const response = await fetch(`${API_BASE}/buckets/generate/`, {
+    const response = await authFetch(`${API_BASE}/buckets/generate/`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
@@ -19,7 +45,7 @@ const api = {
   },
 
   getHistory: async () => {
-    const response = await fetch(`${API_BASE}/buckets/history/`)
+    const response = await authFetch(`${API_BASE}/buckets/history/`)
 
     if (!response.ok) {
       throw new Error("Failed to fetch history")
@@ -29,7 +55,7 @@ const api = {
   },
 
   getBucketDetail: async (id) => {
-    const response = await fetch(`${API_BASE}/buckets/${id}/`)
+    const response = await authFetch(`${API_BASE}/buckets/${id}/`)
 
     if (!response.ok) {
       throw new Error("Failed to fetch bucket detail")
@@ -39,7 +65,7 @@ const api = {
   },
 
   completeItem: async (id) => {
-  const response = await fetch(
+  const response = await authFetch(
     `${API_BASE}/buckets/items/${id}/complete/`,
     { method: "POST" }
   )
@@ -56,7 +82,7 @@ uploadPhoto: async (id, file) => {
   const formData = new FormData()
   formData.append("photo", file)
 
-  const response = await fetch(
+  const response = await authFetch(
     `${API_BASE}/buckets/items/${id}/upload-photo/`,
     {
       method: "POST",
@@ -71,15 +97,33 @@ uploadPhoto: async (id, file) => {
   return await response.json()
 },
 
-generateCollage: async (bucketId, type) => {
-  const response = await fetch(`${API_BASE}/buckets/${bucketId}/collage/?type=${type}&preview=false`)
+generateCollage: async (bucketId, type, options = {}) => {
+  const size = options.size || "normal"
+  const preview = options.preview || false
+  const response = await authFetch(`${API_BASE}/buckets/${bucketId}/collage/?type=${type}&size=${size}&preview=${preview}`)
 
   if (!response.ok) {
     throw new Error("Failed to generate collage")
   }
 
   return await response.blob()
-}
+},
+
+login: async (payload) => {
+  const response = await fetch(`${API_BASE}/auth/login/`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify(payload)
+  })
+
+  if (!response.ok) {
+    throw new Error("Login failed")
+  }
+
+  return await response.json()
+},
 
 }
 
