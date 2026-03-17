@@ -17,7 +17,7 @@
         </div>
         
         <div v-if="bucket.has_collage" class="thumbnail">
-          <img :src="getThumbnailUrl(bucket)" alt="Collage thumbnail" />
+          <img v-if="thumbnails[bucket.bucket_id]" :src="thumbnails[bucket.bucket_id]" alt="Collage thumbnail" />
         </div>
         
         <router-link :to="`/bucket/${bucket.bucket_id}`" class="view-button">
@@ -36,23 +36,50 @@ export default {
   data() {
     return {
       history: [],
+      thumbnails: {},
       loading: true,
-      error: null,
-      apiBase: "http://127.0.0.1:8000/api"
+      error: null
     };
   },
   async created() {
     try {
       const res = await api.getHistory();
       this.history = res;
+      await this.loadThumbnails();
     } catch (err) {
+      if (err.message === "Unauthorized") {
+        localStorage.removeItem("token")
+        this.$router.push("/login")
+        return
+      }
       console.error("Failed to load history", err);
       this.error = "Failed to load history. Please try refreshing the page.";
     } finally {
       this.loading = false;
     }
   },
+  beforeUnmount() {
+    Object.values(this.thumbnails).forEach((url) => {
+      URL.revokeObjectURL(url);
+    });
+  },
   methods: {
+    async loadThumbnails() {
+      const entries = await Promise.all(this.history.map(async (bucket) => {
+        if (!bucket.has_collage) {
+          return [bucket.bucket_id, null];
+        }
+
+        try {
+          const blob = await api.generateCollage(bucket.bucket_id, "horizontal", { size: "small", preview: true });
+          return [bucket.bucket_id, URL.createObjectURL(blob)];
+        } catch (_err) {
+          return [bucket.bucket_id, null];
+        }
+      }));
+
+      this.thumbnails = Object.fromEntries(entries.filter(([, url]) => Boolean(url)));
+    },
     formatDate(dateString) {
       return new Date(dateString).toLocaleDateString();
     },
@@ -63,9 +90,6 @@ export default {
       const completed = this.completedCount(bucket);
       const total = bucket.items.length;
       return total > 0 ? Math.round((completed / total) * 100) : 0;
-    },
-    getThumbnailUrl(bucket) {
-      return `${this.apiBase}/buckets/${bucket.bucket_id}/collage/?type=horizontal&size=small&preview=true`;
     }
   }
 };

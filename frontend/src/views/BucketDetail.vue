@@ -75,16 +75,16 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed, watch } from "vue"
-import { useRoute } from "vue-router"
+import { ref, onMounted, onBeforeUnmount, computed, watch } from "vue"
+import { useRoute, useRouter } from "vue-router"
 import api from "../services/api"
 
 const route = useRoute()
+const router = useRouter()
 const bucket = ref(null)
 const collageType = ref("horizontal") // default type
 
 const mediaBase = "http://127.0.0.1:8000" // for image URLs
-const apiBase = "http://127.0.0.1:8000/api" // used for collage preview URLs
 
 const previewUrl = ref(null)
 const previewLoading = ref(false)
@@ -95,14 +95,28 @@ const actionError = ref(null)
 
 watch(collageType, () => {
   // Clear preview whenever type changes (user must regenerate)
+  if (previewUrl.value) {
+    URL.revokeObjectURL(previewUrl.value)
+  }
   previewUrl.value = null
   previewError.value = null
 })
+
+function handleUnauthorized(err) {
+  if (err.message === "Unauthorized") {
+    localStorage.removeItem("token")
+    router.push("/login")
+    return true
+  }
+
+  return false
+}
 
 async function loadBucket() {
   try {
     bucket.value = await api.getBucketDetail(route.params.id)
   } catch (err) {
+    if (handleUnauthorized(err)) return
     alert("Failed to load bucket")
   }
 }
@@ -115,6 +129,7 @@ async function markComplete(id) {
     await api.completeItem(id)
     await loadBucket()
   } catch (err) {
+    if (handleUnauthorized(err)) return
     actionError.value = "Failed to update item. Please try again."
   }
   actionLoading.value = false
@@ -131,16 +146,13 @@ async function upload(id, event) {
     await api.uploadPhoto(id, file)
     await loadBucket()
   } catch (err) {
+    if (handleUnauthorized(err)) return
     actionError.value = "Failed to upload photo. Please try again."
   }
   actionLoading.value = false
 }
 
 // Preview collage
-function getCollageEndpoint(preview = false) {
-  return `${apiBase}/buckets/${bucket.value.id}/collage/?type=${collageType.value}&preview=${preview}`
-}
-
 function onPreviewLoaded() {
   previewLoading.value = false
 }
@@ -158,7 +170,19 @@ async function generatePreview() {
 
   previewError.value = null
   previewLoading.value = true
-  previewUrl.value = getCollageEndpoint(true)
+
+  if (previewUrl.value) {
+    URL.revokeObjectURL(previewUrl.value)
+  }
+
+  try {
+    const blob = await api.generateCollage(bucket.value.id, collageType.value, { preview: true })
+    previewUrl.value = URL.createObjectURL(blob)
+  } catch (err) {
+    if (handleUnauthorized(err)) return
+    previewError.value = "Failed to load preview"
+    previewLoading.value = false
+  }
 }
 
 // Download collage
@@ -179,6 +203,7 @@ async function downloadCollage() {
     a.click()
     URL.revokeObjectURL(url)
   } catch (err) {
+    if (handleUnauthorized(err)) return
     actionError.value = "Failed to generate collage. Please try again."
   }
   actionLoading.value = false
@@ -190,6 +215,11 @@ const completedCount = computed(() => bucket.value?.items.filter(i => i.complete
 const allCompleted = computed(() => totalCount.value > 0 && completedCount.value === totalCount.value)
 
 onMounted(loadBucket)
+onBeforeUnmount(() => {
+  if (previewUrl.value) {
+    URL.revokeObjectURL(previewUrl.value)
+  }
+})
 </script>
 
 <style>
