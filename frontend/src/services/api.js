@@ -125,6 +125,29 @@ login: async (payload) => {
   return await response.json()
 },
 
+register: async (payload) => {
+  const response = await fetch(`${API_BASE}/auth/register/`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify(payload)
+  })
+
+  if (!response.ok) {
+    let message = "Registration failed"
+    try {
+      const data = await response.json()
+      message = data.error || message
+    } catch (_err) {
+      // Keep fallback message when no JSON body is returned.
+    }
+    throw new Error(message)
+  }
+
+  return await response.json()
+},
+
 }
 
 export default api
