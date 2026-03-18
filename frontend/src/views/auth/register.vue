@@ -1,8 +1,15 @@
 <template>
-  <div class="login-container">
-    <h2>Login</h2>
+  <div class="register-container">
+    <h2>Register</h2>
 
-    <form @submit.prevent="handleLogin">
+    <form @submit.prevent="handleRegister">
+      <input
+        v-model="username"
+        type="text"
+        placeholder="Username"
+        required
+      />
+
       <input
         v-model="email"
         type="email"
@@ -17,13 +24,15 @@
         required
       />
 
-      <button type="submit">Login</button>
+      <button type="submit" :disabled="loading">
+        {{ loading ? "Creating account..." : "Register" }}
+      </button>
     </form>
 
     <p v-if="error" class="error">{{ error }}</p>
     <p class="auth-link">
-      New here?
-      <router-link to="/register">Create an account</router-link>
+      Already have an account?
+      <router-link to="/login">Go to login</router-link>
     </p>
   </div>
 </template>
@@ -35,35 +44,43 @@ import api from "../../services/api"
 
 const router = useRouter()
 
+const username = ref("")
 const email = ref("")
 const password = ref("")
+const loading = ref(false)
 const error = ref("")
 
-async function handleLogin() {
+async function handleRegister() {
+  loading.value = true
+  error.value = ""
+
   try {
-    const res = await api.login({
+    await api.register({
+      username: username.value,
       email: email.value,
       password: password.value
     })
 
-    localStorage.setItem("token", res.access)
-
-    router.push("/")
+    router.push("/login")
   } catch (err) {
-    error.value = "Invalid credentials"
+    error.value = err.message || "Registration failed"
+  } finally {
+    loading.value = false
   }
 }
 </script>
 
 <style>
-.login-container {
+.register-container {
   max-width: 400px;
   margin: auto;
   padding: 60px;
 }
+
 .error {
   color: red;
 }
+
 .auth-link {
   margin-top: 12px;
 }

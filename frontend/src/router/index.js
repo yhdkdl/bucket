@@ -3,6 +3,7 @@ import Home from "../views/Home.vue";
 import History from "../views/History.vue";
 import BucketDetail from "../views/BucketDetail.vue"
 import login from "../views/auth/login.vue"
+import register from "../views/auth/register.vue"
 
 const routes = [
 
@@ -10,6 +11,12 @@ const routes = [
   path: "/login",
   name: "Login",
   component: login,
+  meta: { requiresAuth: false }
+},
+{
+  path: "/register",
+  name: "Register",
+  component: register,
   meta: { requiresAuth: false }
 },
   {
@@ -32,7 +39,7 @@ const routes = [
 },
 {
   path: "/:pathMatch(.*)*",
-  redirect: "/"
+  redirect: "/login"
 }
 ];
 
@@ -50,7 +57,7 @@ router.beforeEach((to, _from, next) => {
     return
   }
 
-  if (to.path === "/login" && isAuthenticated) {
+  if ((to.path === "/login" || to.path === "/register") && isAuthenticated) {
     next("/")
     return
   }
