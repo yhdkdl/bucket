@@ -48,7 +48,7 @@ async function handleLogin() {
 
     localStorage.setItem("token", res.access)
 
-    router.push("/")
+    router.push("/generator")
   } catch (err) {
     error.value = "Invalid credentials"
   }

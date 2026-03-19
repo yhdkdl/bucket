@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from "vue-router";
 import Home from "../views/Home.vue";
+import Landing from "../views/Landing.vue";
 import History from "../views/History.vue";
 import BucketDetail from "../views/BucketDetail.vue"
 import login from "../views/auth/login.vue"
@@ -21,6 +22,12 @@ const routes = [
 },
   {
     path: "/",
+    name: "Landing",
+    component: Landing,
+    meta: { requiresAuth: false }
+  },
+  {
+    path: "/generator",
     name: "Home",
     component: Home,
     meta: { requiresAuth: true }
@@ -58,7 +65,7 @@ router.beforeEach((to, _from, next) => {
   }
 
   if ((to.path === "/login" || to.path === "/register") && isAuthenticated) {
-    next("/")
+    next("/generator")
     return
   }
 
