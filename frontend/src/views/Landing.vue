@@ -14,9 +14,9 @@
             </a>
           </div>
         </div>
-        <div class="hero-image">
+        <!-- <div class="hero-image">
           <div class="hero-image-placeholder"></div>
-        </div>
+        </div> -->
       </section>
 
       <!-- How It Works Section -->
