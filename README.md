@@ -114,7 +114,7 @@ npm install
 npm run dev
 ```
 
-> Your frontend client will spin up and be accessible in your browser at `http://localhost:5173`. Make sure the Python server is running simultaneously so the app can communicate with the backend!
+> Your frontend client will register and be accessible in your browser at `http://localhost:5173`. Make sure the Python server is running simultaneously so the app can communicate with the backend!
 
 ---
 
