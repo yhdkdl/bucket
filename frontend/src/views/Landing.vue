@@ -61,24 +61,28 @@
 
         <div class="categories-grid">
           <div class="category-card urban">
+            <!-- <img src="../assets/image/catagories/urban.jpg" alt="Urban Explorer"> -->
             <div class="category-info">
               <h3>Urban Explorer</h3>
               <p>Hidden gems & city secrets</p>
             </div>
           </div>
           <div class="category-card nature">
+             <!-- <img src="../assets/image/catagories/nature.jpg" alt="Nature Quest"> -->
             <div class="category-info">
               <h3>Nature Quest</h3>
               <p>Trails, parks & waterfalls</p>
             </div>
           </div>
           <div class="category-card foodie">
+             <!-- <img src="../assets/image/catagories/foodie.jpg" alt="Foodie Trail"> -->
             <div class="category-info">
               <h3>Foodie Trail</h3>
               <p>Local flavors & secret eats</p>
             </div>
           </div>
           <div class="category-card photo">
+              <!-- <img src="../assets/image/catagories/photo.jpg" alt="Photo Hunt"> -->
             <div class="category-info">
               <h3>Photo Hunt</h3>
               <p>The most Instagrammable spots</p>
