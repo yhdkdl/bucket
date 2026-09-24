@@ -14,9 +14,37 @@
             </a>
           </div>
         </div>
-        <!-- <div class="hero-image">
-          <div class="hero-image-placeholder"></div>
-        </div> -->
+        <div class="hero-image">
+          <div class="hero-visual">
+            <div class="bucket-list-visual">
+              <div class="bucket-item checked">
+                <span class="checkmark">✓</span>
+                <span class="item-text">Visit hidden waterfall</span>
+              </div>
+              <div class="bucket-item checked">
+                <span class="checkmark">✓</span>
+                <span class="item-text">Try street food tour</span>
+              </div>
+              <div class="bucket-item">
+                <span class="checkmark">○</span>
+                <span class="item-text">Sunset viewpoint hike</span>
+              </div>
+              <div class="bucket-item">
+                <span class="checkmark">○</span>
+                <span class="item-text">Local café discovery</span>
+              </div>
+              <div class="bucket-item">
+                <span class="checkmark">○</span>
+                <span class="item-text">Night photography walk</span>
+              </div>
+            </div>
+            <div class="floating-elements">
+              <div class="float-element location">📍</div>
+              <div class="float-element star">⭐</div>
+              <div class="float-element map">🗺️</div>
+            </div>
+          </div>
+        </div>
       </section>
 
       <!-- How It Works Section -->
@@ -61,28 +89,28 @@
 
         <div class="categories-grid">
           <div class="category-card urban">
-            <!-- <img src="../assets/image/catagories/urban.jpg" alt="Urban Explorer"> -->
+            <img :src="urbanImage" alt="Urban Explorer">
             <div class="category-info">
               <h3>Urban Explorer</h3>
               <p>Hidden gems & city secrets</p>
             </div>
           </div>
           <div class="category-card nature">
-             <!-- <img src="../assets/image/catagories/nature.jpg" alt="Nature Quest"> -->
+             <img :src="natureImage" alt="Nature Quest">
             <div class="category-info">
               <h3>Nature Quest</h3>
               <p>Trails, parks & waterfalls</p>
             </div>
           </div>
           <div class="category-card foodie">
-             <!-- <img src="../assets/image/catagories/foodie.jpg" alt="Foodie Trail"> -->
+             <img :src="foodieImage" alt="Foodie Trail">
             <div class="category-info">
               <h3>Foodie Trail</h3>
               <p>Local flavors & secret eats</p>
             </div>
           </div>
           <div class="category-card photo">
-              <!-- <img src="../assets/image/catagories/photo.jpg" alt="Photo Hunt"> -->
+              <img :src="photoImage" alt="Photo Hunt">
             <div class="category-info">
               <h3>Photo Hunt</h3>
               <p>The most Instagrammable spots</p>
@@ -135,6 +163,10 @@
 
 <script setup>
 import MainLayout from '../components/MainLayout.vue';
+import urbanImage from '../assets/image/catagories/urban.jpg';
+import natureImage from '../assets/image/catagories/nature.jpg';
+import foodieImage from '../assets/image/catagories/food trial.jpg';
+import photoImage from '../assets/image/catagories/photo hunt.jpg';
 </script>
 
 <style scoped>
@@ -252,16 +284,115 @@ a {
 
 .hero-image {
   flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
-.hero-image-placeholder {
+.hero-visual {
+  position: relative;
   width: 100%;
+  max-width: 500px;
   height: 480px;
-  background: linear-gradient(135deg, #cbd5e1, #94a3b8);
+}
+
+.bucket-list-visual {
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
   border-radius: 24px;
+  padding: 2.5rem;
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
   position: relative;
-  overflow: hidden;
+  z-index: 2;
+  animation: float 6s ease-in-out infinite;
+}
+
+.bucket-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 0;
+  border-bottom: 1px solid #e2e8f0;
+  transition: all 0.3s ease;
+}
+
+.bucket-item:last-child {
+  border-bottom: none;
+}
+
+.bucket-item.checked {
+  opacity: 0.6;
+}
+
+.bucket-item.checked .item-text {
+  text-decoration: line-through;
+  color: #94a3b8;
+}
+
+.checkmark {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background-color: #00e5ff;
+  color: #0f172a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 0.875rem;
+  flex-shrink: 0;
+}
+
+.bucket-item:not(.checked) .checkmark {
+  background-color: #e2e8f0;
+  color: #64748b;
+}
+
+.item-text {
+  font-weight: 500;
+  color: #0f172a;
+  font-size: 1rem;
+}
+
+.floating-elements {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+}
+
+.float-element {
+  position: absolute;
+  font-size: 2rem;
+  animation: float 4s ease-in-out infinite;
+}
+
+.float-element.location {
+  top: 10%;
+  right: -20px;
+  animation-delay: 0s;
+}
+
+.float-element.star {
+  top: 50%;
+  right: -30px;
+  animation-delay: 1s;
+}
+
+.float-element.map {
+  bottom: 20%;
+  left: -20px;
+  animation-delay: 2s;
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-20px);
+  }
 }
 
 /* Sections Base */
@@ -372,12 +503,20 @@ section > h2 {
   display: flex;
   align-items: flex-end;
   color: white;
-  background-size: cover;
-  background-position: center;
   position: relative;
   overflow: hidden;
   cursor: pointer;
   transition: transform 0.3s ease;
+}
+
+.category-card img {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 0;
 }
 
 .category-card::before {
@@ -385,6 +524,7 @@ section > h2 {
   position: absolute;
   top: 0; left: 0; right: 0; bottom: 0;
   background: linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0) 60%);
+  z-index: 1;
 }
 
 .category-card:hover {
@@ -409,11 +549,7 @@ section > h2 {
   color: #f8fafc;
 }
 
-/* Specific Category Backgrounds - Placeholder Gradients */
-.urban { background: linear-gradient(to bottom right, #0f172a, #3b82f6); }
-.nature { background: linear-gradient(to bottom right, #14532d, #22c55e); }
-.foodie { background: linear-gradient(to bottom right, #78350f, #f59e0b); }
-.photo { background: linear-gradient(to bottom right, #4a044e, #d946ef); }
+
 
 /* Bottom CTA */
 .bottom-cta {
@@ -452,19 +588,24 @@ section > h2 {
     padding-top: 2rem;
     gap: 3rem;
   }
-  
+
   .hero-content {
     max-width: 100%;
   }
-  
+
   .hero p {
     margin: 0 auto 2.5rem;
   }
-  
+
   .hero-cta {
     justify-content: center;
   }
-  
+
+  .hero-visual {
+    max-width: 100%;
+    height: 400px;
+  }
+
   .categories-grid {
     grid-template-columns: repeat(2, 1fr);
   }
@@ -474,21 +615,29 @@ section > h2 {
   .steps-grid, .features-grid {
     grid-template-columns: 1fr;
   }
-  
+
   .hero h1 {
     font-size: 3rem;
   }
-  
+
+  .hero-visual {
+    height: 350px;
+  }
+
+  .bucket-list-visual {
+    padding: 1.5rem;
+  }
+
   .categories-header {
     flex-direction: column;
     align-items: flex-start;
     gap: 1rem;
   }
-  
+
   .cta-card {
     padding: 4rem 2rem;
   }
-  
+
   .cta-card h2 {
     font-size: 2.5rem;
   }
