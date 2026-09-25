@@ -35,7 +35,7 @@ Return ONLY valid JSON like:
     }
 
     body = {
-        "model": "openai/gpt-3.5-turbo",
+        "model": "openrouter/free",
         "messages": [
             {"role": "system", "content": "You generate fun real-world adventures."},
             {"role": "user", "content": prompt}
