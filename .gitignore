@@ -26,6 +26,11 @@ share/python-wheels/
 *.egg
 MANIFEST
 
+
+# media
+backend\media
+
+
 # Virtual Environment
 backend/venv/
 
